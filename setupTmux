@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# Sets up a session with a window for an editor and a window for executing a command
+# ej. npm start
+setupBasicSession() {
+  sessionName=$1
+  workingDirPath=$2
+
+  tmux new-session -d -s $sessionName
+
+  tmux rename-window -t $sessionName:1 'Editor'
+  tmux send-keys -t $sessionName:1 "cd $workingDirPath" C-m "clear" C-m
+
+  tmux new-window -t $sessionName:2 -n 'Run'
+  tmux send-keys -t $sessionName:2 "cd $workingDirPath" C-m "clear" C-m
+
+  tmux select-window -t $sessionName:1
+}
+
+basicSessionsArray=(
+  "Documents ~/Documents"
+  "Pictures ~/Pictures"
+)
+
+for s in "${basicSessionsArray[@]}"; do
+  read -ra sessionConfig <<< "$s"
+  session=${sessionConfig[0]}
+  workingDir=${sessionConfig[1]}
+
+  # Only create the session if it does not exist
+  tmux has-session -t $session 2> /dev/null
+  if [ $? != 0 ]; then
+    setupBasicSession $session $workingDir
+  fi
+done
